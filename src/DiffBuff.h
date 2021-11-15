@@ -70,9 +70,9 @@ namespace ILI9488_T4
             };
 
 
-        static const int LX = 240;                  // framebuffer width in orientation 0
-        static const int LY = 320;                  // framebuffer height in orientation 0
-        static const int MAX_WRITE_LINE = 120;      // max number of lines to be written in a single operation.
+        static const int LX = 320;                  // framebuffer width in orientation 0
+        static const int LY = 480;                  // framebuffer height in orientation 0
+        static const int MAX_WRITE_LINE = 160;      // max number of lines to be written in a single operation.
         static const int MIN_SCANLINE_SPACE = 8;    // min number of lines between the current write line and the current scanline
 
         static_assert((LX & 3) == 0, "LX must be divisible by 4");
