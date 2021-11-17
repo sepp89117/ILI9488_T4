@@ -80,8 +80,8 @@
 
 #define SPI_SPEED 30000000
 
-#define LX  320
-#define LY  240
+#define LX  480
+#define LY  320
 
 
 ILI9488Wrapper tft(PIN_CS, PIN_DC, PIN_SCK, PIN_MOSI, PIN_MISO, PIN_RESET, PIN_TOUCH_CS, PIN_TOUCH_IRQ);
@@ -171,7 +171,7 @@ void setup()
         delay(1000);
         }
 
-    tft.setRotation(3); // landscape 320x240
+    tft.setRotation(3); // landscape 480x320
     tft.setFramebuffers(internal_fb); // one internal framebuffer
     tft.setDiffBuffers(&diff1, &diff2); // 2 diff buffers
     tft.setDiffGap(3); // very small gap !

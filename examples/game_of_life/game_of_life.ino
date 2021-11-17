@@ -46,8 +46,8 @@ ILI9488_T4::DiffBuffStatic<8192> diff2;
 
 
 // Screen size in landscape mode
-#define LX  320
-#define LY  240
+#define LX  480
+#define LY  320
 
 // 30MHz SPI. can do better with short wires
 #define SPI_SPEED    30000000
@@ -164,7 +164,7 @@ void setup()
         delay(1000);
         }
 
-    tft.setRotation(3);                 // landscape mode 320x240
+    tft.setRotation(3);                 // landscape mode 480x320
     tft.setFramebuffers(internal_fb);   // set 1 internal framebuffer -> activate double buffering.
     tft.setDiffBuffers(&diff1, &diff2); // set the 2 diff buffers => activate differential updates. 
     tft.setDiffGap(4);                  // use a small gap for the diff buffers (useful because cells are small...)

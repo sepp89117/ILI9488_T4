@@ -9,25 +9,25 @@ namespace ILI9488_T4
             {
             switch (orientation)
                 {
-            case LANDSCAPE_320x240:
+            case LANDSCAPE_480x320:
                 x1 = DiffBuffBase::LX - 1 - ymax;
                 x2 = DiffBuffBase::LX - 1 - ymin;
                 y1 = xmin;
                 y2 = xmax;
                 break;
-            case PORTRAIT_240x320_FLIPPED:
+            case PORTRAIT_320x480_FLIPPED:
                 x1 = DiffBuffBase::LX - 1 - xmax;
                 x2 = DiffBuffBase::LX - 1 - xmin;
                 y1 = DiffBuffBase::LY - 1 - ymax;
                 y2 = DiffBuffBase::LY - 1 - ymin;
                 break;
-            case LANDSCAPE_320x240_FLIPPED:
+            case LANDSCAPE_480x320_FLIPPED:
                 x1 = ymin;
                 x2 = ymax;
                 y1 = DiffBuffBase::LY - 1 - xmax;
                 y2 = DiffBuffBase::LY - 1 - xmin;
                 break;
-            default: // case PORTRAIT_240x320:
+            default: // case PORTRAIT_320x480:
                 x1 = xmin;
                 x2 = xmax;
                 y1 = ymin;
@@ -41,16 +41,16 @@ namespace ILI9488_T4
             {
             switch (fb_new_orientation)
                 {
-                case PORTRAIT_240x320:
+                case PORTRAIT_320x480:
                     _copy_rotate_0(fb_old, fb_new);
                     return;
-                case LANDSCAPE_320x240:
+                case LANDSCAPE_480x320:
                     _copy_rotate_90(fb_old, fb_new);
                     return;
-                case PORTRAIT_240x320_FLIPPED:
+                case PORTRAIT_320x480_FLIPPED:
                     _copy_rotate_180(fb_old, fb_new);
                     return;
-                case LANDSCAPE_320x240_FLIPPED:
+                case LANDSCAPE_480x320_FLIPPED:
                     _copy_rotate_270(fb_old, fb_new);
                     return;
                 }
@@ -67,16 +67,16 @@ namespace ILI9488_T4
             const int h = y2 - y1 + 1;
             switch (fb_new_orientation)
                 {
-                case PORTRAIT_240x320:
+                case PORTRAIT_320x480:
                     _copy_rotate_0(fb_old, fb_new, x1, x2, y1, y2, w, h, src_stride);
                     return;
-                case LANDSCAPE_320x240:
+                case LANDSCAPE_480x320:
                     _copy_rotate_90(fb_old, fb_new, x1, x2, y1, y2, w, h, src_stride);
                     return;
-                case PORTRAIT_240x320_FLIPPED:
+                case PORTRAIT_320x480_FLIPPED:
                     _copy_rotate_180(fb_old, fb_new, x1, x2, y1, y2, w, h, src_stride);
                     return;
-                case LANDSCAPE_320x240_FLIPPED:
+                case LANDSCAPE_480x320_FLIPPED:
                     _copy_rotate_270(fb_old, fb_new, x1, x2, y1, y2, w, h, src_stride);
                     return;
                 }
@@ -205,16 +205,16 @@ namespace ILI9488_T4
             {
             switch (fb_new_orientation)
                 {
-                case PORTRAIT_240x320:
+                case PORTRAIT_320x480:
                     _computeDiff0<COPY_NEW_OVER_OLD, USE_MASK>(fb_old, fb_new, gap, compare_mask);
                     return;
-                case LANDSCAPE_320x240:
+                case LANDSCAPE_480x320:
                     _computeDiff1<COPY_NEW_OVER_OLD, USE_MASK>(fb_old, fb_new, gap, compare_mask);
                     return;
-                case PORTRAIT_240x320_FLIPPED:
+                case PORTRAIT_320x480_FLIPPED:
                     _computeDiff2<COPY_NEW_OVER_OLD, USE_MASK>(fb_old, fb_new, gap, compare_mask);
                     return;
-                case LANDSCAPE_320x240_FLIPPED:
+                case LANDSCAPE_480x320_FLIPPED:
                     _computeDiff3<COPY_NEW_OVER_OLD, USE_MASK>(fb_old, fb_new, gap, compare_mask);
                     return;
                 }
@@ -612,19 +612,19 @@ namespace ILI9488_T4
                 int m = 0, mdelta = 0;
                 switch (fb_new_orientation)
                     {
-                case PORTRAIT_240x320:
+                case PORTRAIT_320x480:
                     m = stride * (yc - ymin);
                     mdelta = 1;
                     break;
-                case LANDSCAPE_320x240:
+                case LANDSCAPE_480x320:
                     m = (yc - ymin) + stride*(xmax - xmin);
                     mdelta =  -stride;
                     break;
-                case PORTRAIT_240x320_FLIPPED:
+                case PORTRAIT_320x480_FLIPPED:
                     m = stride * (ymax - yc) + (xmax - xmin);
                     mdelta = -1;
                     break;
-                case LANDSCAPE_320x240_FLIPPED:
+                case LANDSCAPE_480x320_FLIPPED:
                     m = ymax - yc;
                     mdelta = stride;
                     break;

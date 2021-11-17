@@ -37,8 +37,8 @@
 #define SPI_SPEED 30000000
 
 // screen size in portrait mode
-#define LX 240
-#define LY 320
+#define LX 320
+#define LX 480
 
 // screen driver objects
 ILI9488_T4::ILI9488Driver tft0(PIN_CS0, PIN_DC0, PIN_SCK0, PIN_MOSI0, PIN_MISO0, PIN_RESET0, PIN_TOUCH_CS0, PIN_TOUCH_IRQ0); // for screen on SPI0
@@ -65,7 +65,7 @@ ILI9488_T4::DiffBuffStatic<6000> diff4; //
 /// <param name="color"></param>
 void clear(uint16_t* fb, uint16_t color = 0) 
     {
-    for (int i = 0; i < 240 * 320; i++) fb[i] = color;
+    for (int i = 0; i < 480 * 320; i++) fb[i] = color;
     }
 
 /// <summary>
@@ -231,7 +231,7 @@ void setup() {
         }
 
     // set paramters for the first display
-    tft0.setRotation(0);                 // portrait mode 240 x320
+    tft0.setRotation(0);                 // portrait mode 320x480
     tft0.setFramebuffers(internal_fb0);  // set 1 internal framebuffer -> activate double buffering.
     tft0.setDiffBuffers(&diff1, &diff2); // set the 2 diff buffers => activate differential updates. 
     tft0.setDiffGap(4);                  // use a small gap for the diff buffers
@@ -239,7 +239,7 @@ void setup() {
     tft0.setVSyncSpacing(2);             // set framerate = refreshrate/2 (and enable vsync at the same time). 
 
     // set parameters for the second display
-    tft1.setRotation(0);                 // portrait mode 240 x320
+    tft1.setRotation(0);                 // portrait mode 320x480
     tft1.setFramebuffers(internal_fb1);  // set 1 internal framebuffer -> activate double buffering.
     tft1.setDiffBuffers(&diff3, &diff4); // set the 2 diff buffers => activate differential updates. 
     tft1.setDiffGap(4);                  // use a small gap for the diff buffers

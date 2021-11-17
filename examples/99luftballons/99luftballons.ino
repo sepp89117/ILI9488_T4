@@ -49,8 +49,8 @@ ILI9488_T4::DiffBuffStatic<6000> diff1;
 ILI9488_T4::DiffBuffStatic<6000> diff2;
 
 // screen size in portrait mode
-#define LX  240
-#define LY  320
+#define LX 320
+#define LY 480
 
 // our framebuffers
 uint16_t internal_fb[LX * LY];     // used by the library for buffering
@@ -169,7 +169,7 @@ void setup()
         delay(1000);
         }
 
-    tft.setRotation(0);                 // portrait mode 240 x320
+    tft.setRotation(0);                 // portrait mode 320x480
 
     tft.setFramebuffers(internal_fb);   // set 1 internal framebuffer -> activate double buffering.
 

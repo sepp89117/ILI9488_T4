@@ -58,8 +58,8 @@ ILI9488_T4::DiffBuffStatic<6000> diff2;
 
 
 // framebuffers
-uint16_t internal_fb[320 * 240];     // used for buffering
-uint16_t fb[320 * 240];              // main framebuffer we draw onto.
+uint16_t internal_fb[320 * 480];     // used for buffering
+uint16_t fb[320 * 480];              // main framebuffer we draw onto.
 
 
 
@@ -125,7 +125,7 @@ void setup()
     LX = tft.width();  // save screen dimension for the drawing methods. 
     LY = tft.height(); //
 
-    tft.setRotation(0);                 // start in portrait mode 240x320
+    tft.setRotation(0);                 // start in portrait mode 320x480
 
     tft.setFramebuffers(internal_fb);   // set 1 internal framebuffer > enable double buffering
 

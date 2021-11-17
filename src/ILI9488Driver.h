@@ -326,10 +326,10 @@ namespace ILI9488_T4
         /** The 4 possible orientations */
         enum
         {
-            PORTRAIT_240x320 = 0,
-            LANDSCAPE_320x240 = 1,
-            PORTRAIT_240x320_FLIPPED = 2,
-            LANDSCAPE_320x240_FLIPPED = 3,
+            PORTRAIT_320x480 = 0,
+            LANDSCAPE_480x320 = 1,
+            PORTRAIT_320x480_FLIPPED = 2,
+            LANDSCAPE_480x320_FLIPPED = 3,
         };
 
         /**
@@ -338,8 +338,8 @@ namespace ILI9488_T4
     * The default start up orientation is 0.
     * The framebuffer layout depend on whether the display is in portrait or landscape mode.
     * 
-    * - orientation 0 and 2 in portrait mode : 240x320.
-    * - orientation 1 and 3 in landscape mode : 320x240.
+    * - orientation 0 and 2 in portrait mode : 320x480.
+    * - orientation 1 and 3 in landscape mode : 480x320.
     *
     * NOTE: Orientation 0 the the only one for with pixels refresh order coincide with the framebuffer
     * ordering so it it is the orientation that will allow the fastest diff redraw with fewest screen 
@@ -1385,11 +1385,11 @@ namespace ILI9488_T4
 
         void _write16BitColor(uint16_t color, uint16_t count, bool last_pixel);
 
-            /**********************************************************************************************************
+        /**********************************************************************************************************
     * About timing and vsync.
     ***********************************************************************************************************/
 
-            uint32_t _period_mode0; // number of microsceonds between screen refresh for the fastest mode.
+        uint32_t _period_mode0; // number of microsceonds between screen refresh for the fastest mode.
 
         uint32_t _period;          // number of microsceonds between screen refresh.
         elapsedMicros _synced_em;  // number of microseconds sinces the last scanline synchronization
@@ -1697,7 +1697,7 @@ namespace ILI9488_T4
 
         void _writecommand_cont(uint8_t c) __attribute__((always_inline))
         {
-            _maybeUpdateTCR(_tcr_dc_assert | LPSPI_TCR_FRAMESZ(7) | LPSPI_TCR_CONT);
+            _maybeUpdateTCR(_tcr_dc_assert | LPSPI_TCR_FRAMESZ(7) /*| LPSPI_TCR_CONT*/);
             _pimxrt_spi->TDR = c;
             _pending_rx_count++;
             _waitFifoNotFull();

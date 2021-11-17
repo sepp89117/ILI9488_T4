@@ -63,10 +63,10 @@ namespace ILI9488_T4
         /** Framebuffer orientation**/
         enum
             {
-            PORTRAIT_240x320 = 0,
-            LANDSCAPE_320x240 = 1,
-            PORTRAIT_240x320_FLIPPED = 2,
-            LANDSCAPE_320x240_FLIPPED = 3,
+            PORTRAIT_320x480 = 0,
+            LANDSCAPE_480x320 = 1,
+            PORTRAIT_320x480_FLIPPED = 2,
+            LANDSCAPE_480x320_FLIPPED = 3,
             };
 
 
@@ -239,7 +239,7 @@ namespace ILI9488_T4
     * The memory for holding the diff is allocated by the user and is passed to the object a
     * construction time.
     *
-    * PERFORMANCE: On teensy 4.1, for framebuffers of size 320x240. It takes around 1ms to
+    * PERFORMANCE: On teensy 4.1, for framebuffers of size 480x320. It takes around 1ms to
     * compute a diff. This means that computing the diff consumes around 5-10% of a frame period 
     * at 60FPS (but still leaves around 15ms to generate each frame).
     *******************************************************************************************/

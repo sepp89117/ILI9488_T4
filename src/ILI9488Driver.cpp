@@ -478,13 +478,13 @@ namespace ILI9488_T4
         _rotation = m;
         switch (m)
         {
-        case 0: // portrait 240x320
-        case 2: // portrait 240x320
+        case 0: // portrait 320x480
+        case 2: // portrait 320x480
             _width = ILI9488_T4_TFTWIDTH;
             _height = ILI9488_T4_TFTHEIGHT;
             break;
-        case 1: // landscape 320x240
-        case 3: // landscape 320x240
+        case 1: // landscape 480x320
+        case 3: // landscape 480x320
             _width = ILI9488_T4_TFTHEIGHT;
             _height = ILI9488_T4_TFTWIDTH;
             break;
@@ -671,13 +671,18 @@ namespace ILI9488_T4
     void ILI9488Driver::clear(uint16_t color)
     {
         waitUpdateAsyncComplete();
+
         _beginSPITransaction(_spi_clock);
-        _writecommand_cont(ILI9488_T4_PASET);
-        _writedata16_cont(0);
-        _writedata16_cont(ILI9488_T4_TFTHEIGHT - 1);
-        _writecommand_cont(ILI9488_T4_CASET);
-        _writedata16_cont(0);
-        _writedata16_cont(ILI9488_T4_TFTWIDTH - 1);
+
+        //setAddr
+        _writecommand_cont(ILI9488_T4_PASET);           // Row addr set
+        _writedata16_cont(0);                           //y0
+        _writedata16_cont(ILI9488_T4_TFTHEIGHT - 1);    //y1
+        _writecommand_cont(ILI9488_T4_CASET);           // Column addr set
+        _writedata16_cont(0);                           //x0
+        _writedata16_cont(ILI9488_T4_TFTWIDTH - 1);     //x1
+
+        //Write data
         _writecommand_cont(ILI9488_T4_RAMWR);
         for (int i = 0; i < ILI9488_T4_NB_PIXELS; i++)
             _write16BitColor(color);
@@ -1207,16 +1212,16 @@ namespace ILI9488_T4
         int mdelta = 0;
         switch (_rotation)
         {
-        case PORTRAIT_240x320:
+        case PORTRAIT_320x480:
             mdelta = 1;
             break;
-        case LANDSCAPE_320x240:
+        case LANDSCAPE_480x320:
             mdelta = -stride;
             break;
-        case PORTRAIT_240x320_FLIPPED:
+        case PORTRAIT_320x480_FLIPPED:
             mdelta = -1;
             break;
-        case LANDSCAPE_320x240_FLIPPED:
+        case LANDSCAPE_480x320_FLIPPED:
             mdelta = stride;
             break;
         }
@@ -1225,16 +1230,16 @@ namespace ILI9488_T4
             int m = 0;
             switch (_rotation)
             {
-            case PORTRAIT_240x320:
+            case PORTRAIT_320x480:
                 m = stride * (yc - y1);
                 break;
-            case LANDSCAPE_320x240:
+            case LANDSCAPE_480x320:
                 m = (yc - y1) + stride * (x2 - x1);
                 break;
-            case PORTRAIT_240x320_FLIPPED:
+            case PORTRAIT_320x480_FLIPPED:
                 m = stride * (y2 - yc) + (x2 - x1);
                 break;
-            case LANDSCAPE_320x240_FLIPPED:
+            case LANDSCAPE_480x320_FLIPPED:
                 m = y2 - yc;
                 break;
             }
@@ -1582,7 +1587,6 @@ namespace ILI9488_T4
             _pending_rx_count++; //
             _waitFifoNotFull();
         }
-
     }
 
     void ILI9488Driver::_write16BitColor(uint16_t color, uint16_t count, bool last_pixel)
@@ -1608,7 +1612,7 @@ namespace ILI9488_T4
         {
             _maybeUpdateTCR(_tcr_dc_not_assert | LPSPI_TCR_FRAMESZ(23));
             _pimxrt_spi->TDR = color24;
-            _pending_rx_count++; 
+            _pending_rx_count++;
             _waitTransmitComplete();
         }
         else
@@ -1773,16 +1777,16 @@ namespace ILI9488_T4
         switch (getRotation())
         {
         case 0:
-            _print("0 (PORTRAIT_240x320)\n");
+            _print("0 (PORTRAIT_320x480)\n");
             break;
         case 1:
-            _print("1 (LANDSCAPE_320x240)\n");
+            _print("1 (LANDSCAPE_480x320)\n");
             break;
         case 2:
-            _print("2 (PORTRAIT_240x320_FLIPPED)\n");
+            _print("2 (PORTRAIT_320x480_FLIPPED)\n");
             break;
         case 3:
-            _print("3 (LANDSCAPE_320x240_FLIPPED)\n");
+            _print("3 (LANDSCAPE_480x320_FLIPPED)\n");
             break;
         }
 

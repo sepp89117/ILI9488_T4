@@ -3,7 +3,7 @@
 * ILI9488_T4 library example. Interfacing with the LVGL library
 *
 * This example demonstrates how to use this driver with the LVGL
-* library. Here, allocate an internal framebuffer 320x240 for the 
+* library. Here, allocate an internal framebuffer 480x320 for the 
 * ILI9488_T4 driver but only a small 320x40 buffer for LVGL to draw 
 * onto. Then we use the updateRegion() method from the library to 
 * update the internal framebuffer and sync with the screen with
@@ -90,8 +90,8 @@
 #define SPI_SPEED       40000000
 
 // screen size in landscape mode
-#define LX  320
-#define LY  240
+#define LX  480
+#define LY  320
 
 
 // 2 diff buffers with about 8K memory each
