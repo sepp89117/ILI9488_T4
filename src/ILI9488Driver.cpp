@@ -218,19 +218,28 @@ namespace ILI9488_T4
 
         _spi_tcr_current = _pimxrt_spi->TCR; // get the current TCR value
 
-        if (!_pspi->pinIsChipSelect(_dc))
+        if (_pspi->pinIsChipSelect(_dc))
         {
-            _printf("\n*** ERROR: DC (here on pin %d) is not a valid cs pin for SPI%d ***\n\n", _dc, _spi_num);
-            return false; // ERROR, DC is not a hardware CS pin for the SPI bus.
+            uint8_t dc_cs_index = _pspi->setCS(_dc);
+            // will depend on which PCS but first get this to work...
+            dc_cs_index--; // convert to 0 based
+            _tcr_dc_assert = LPSPI_TCR_PCS(dc_cs_index);
+            _tcr_dc_not_assert = LPSPI_TCR_PCS(3);
         }
+        else
+        {
+            // DC is not valid hardware CS pin
+            _dcport = portOutputRegister(_dc);
+            _dcpinmask = digitalPinToBitMask(_dc);
+            pinMode(_dc, OUTPUT);
+            _directWriteHigh(_dcport, _dcpinmask);
+            _tcr_dc_assert = LPSPI_TCR_PCS(0);
+            _tcr_dc_not_assert = LPSPI_TCR_PCS(1);
+        }
+
         _printf("- DC on pin %d [SPI%d]\n", _dc, _spi_num);
         _printf("- CS on pin %d\n", _cs);
 
-        // Ok, DC is on a hardware CS pin
-        uint8_t dc_cs_index = _pspi->setCS(_dc);
-        dc_cs_index--; // convert to 0 based
-        _tcr_dc_assert = LPSPI_TCR_PCS(dc_cs_index);
-        _tcr_dc_not_assert = LPSPI_TCR_PCS(3);
         _maybeUpdateTCR(_tcr_dc_not_assert | LPSPI_TCR_FRAMESZ(7)); // drive DC high now.
 
         if (_rst < 255)
@@ -261,7 +270,6 @@ namespace ILI9488_T4
 
         _rotation = 0; // default rotation
 
-        int r = ILI9488_T4_RETRY_INIT;
         while (1)
         { // sometimes, init may fail because of instable power supply. Retry in this case.
             if (_rst < 255)
@@ -323,51 +331,50 @@ namespace ILI9488_T4
             _print("  - Self Diagnostic    : 0x");
             _println(res_RDSELFDIAG, HEX);
 
-            bool ok = true;
             if ((res_RDMODE == 0) && (res_RDPIXFMT == 0) && (res_RDIMGFMT == 0) && (res_RDSELFDIAG == 0))
             {
                 _print("\n*** ERROR: Cannot read screen registers. Check the MISO line or decrease SPI read speed ***\n\n");
-                ok = false;
+                _readable = false;
             }
             else
             {
                 if (res_RDMODE != 0x9C)
                 { // wrong power display mode
                     _print("\n*** ERROR: incorrect power mode ! ***\n\n");
-                    ok = false;
+                    _readable = false;
                 }
                 if (res_RDPIXFMT != 0x5)
                 { // wrong pixel format
                     _print("\n*** ERROR: incorrect pixel format ! ***\n\n");
-                    ok = false;
+                    _readable = false;
                 }
                 if (res_RDIMGFMT != 0x0)
                 { // wrong image format
                     _print("\n*** ERROR: incorrect image format ! ***\n\n");
-                    ok = false;
+                    _readable = false;
                 }
                 if (res_RDSELFDIAG != ILI9488_T4_SELFDIAG_OK)
                 { // wrong self diagnotic value
                     _print("\n*** ERROR: incorrect self-diagnotic value ! ***\n\n");
-                    ok = false;
+                    _readable = false;
                 }
             }
-            if (ok)
+
+            _period_mode0 = _period; // save the period for fastest mode.
+            setRefreshMode(0);
+
+            if (_readable)
             {
                 // all good, ready to warp pixels :-)
                 // ok, we can talk to the display so we set the (max) refresh rate to read its exact values
-                setRefreshMode(0);
-                _period_mode0 = _period; // save the period for fastest mode.
+
                 _print("\nOK. Screen initialization successful !\n\n");
-                return true;
             }
-            // error
-            if (--r <= 0)
+            else
             {
-                _print("\n*** CANNOT CONNECT TO ILI9488 SCREEN. ABORTING... ***\n\n");
+                _print("\nOK. Screen initialization successful but without readings !\n\n");
             }
-            _spi_clock_read /= 2;
-            _printf("Retrying connexion with slower SPI read speed : %.2fMhz", _spi_clock_read / 1000000.0f);
+            return true;
         }
     }
 
@@ -536,6 +543,7 @@ namespace ILI9488_T4
     /** return the current scanline in [0, 319]. Sync with SPI only if required */
     int ILI9488Driver::_getScanLine(bool sync)
     {
+
         if (!sync)
         {
             return (_synced_scanline + ((((uint64_t)_synced_em) * ILI9488_T4_NB_SCANLINES) / _period)) % ILI9488_T4_NB_SCANLINES;
@@ -569,18 +577,24 @@ namespace ILI9488_T4
     void ILI9488Driver::_sampleRefreshRate()
     {
         const int NB_SAMPLE_FRAMES = 10;
-        while (_getScanLine(true) != 0)
-            ; // wait to reach scanline 0
-        while (_getScanLine(true) == 0)
-            ;                 // wait to begin scanline 1.
-        elapsedMicros em = 0; // start counter
-        for (int i = 0; i < NB_SAMPLE_FRAMES; i++)
+        if (_readable)
         {
-            delayMicroseconds(5000); // must be less than 200 FPS so wait at least 5ms
             while (_getScanLine(true) != 0)
                 ; // wait to reach scanline 0
             while (_getScanLine(true) == 0)
                 ; // wait to begin scanline 1.
+        }
+        elapsedMicros em = 0; // start counter
+        if (_readable)
+        {
+            for (int i = 0; i < NB_SAMPLE_FRAMES; i++)
+            {
+                delayMicroseconds(5000); // must be less than 200 FPS so wait at least 5ms
+                while (_getScanLine(true) != 0)
+                    ; // wait to reach scanline 0
+                while (_getScanLine(true) == 0)
+                    ; // wait to begin scanline 1.
+            }
         }
         _period = (uint32_t)round(((float)em) / NB_SAMPLE_FRAMES);
     }
@@ -675,12 +689,12 @@ namespace ILI9488_T4
         _beginSPITransaction(_spi_clock);
 
         //setAddr
-        _writecommand_cont(ILI9488_T4_PASET);           // Row addr set
-        _writedata16_cont(0);                           //y0
-        _writedata16_cont(ILI9488_T4_TFTHEIGHT - 1);    //y1
-        _writecommand_cont(ILI9488_T4_CASET);           // Column addr set
-        _writedata16_cont(0);                           //x0
-        _writedata16_cont(ILI9488_T4_TFTWIDTH - 1);     //x1
+        _writecommand_cont(ILI9488_T4_PASET);        // Row addr set
+        _writedata16_cont(0);                        //y0
+        _writedata16_cont(ILI9488_T4_TFTHEIGHT - 1); //y1
+        _writecommand_cont(ILI9488_T4_CASET);        // Column addr set
+        _writedata16_cont(0);                        //x0
+        _writedata16_cont(ILI9488_T4_TFTWIDTH - 1);  //x1
 
         //Write data
         _writecommand_cont(ILI9488_T4_RAMWR);
@@ -1126,7 +1140,10 @@ namespace ILI9488_T4
             } // make sure we are good (in case delayMicroseconds() in not precise enough).
             _restartUploadTime();
             // ok, scanline is just after sc1 (if not late).
-            _slinitpos = _getScanLine(false);                                // save initial scanline position
+            if (_readable)
+                _slinitpos = _getScanLine(false); // save initial scanline position
+            else
+                _slinitpos = 0;
             _em_async = 0;                                                   // start the counter
             const uint32_t tfs = micros() + _microToReachScanLine(0, false); // time when this frame will start being displayed on the screen.
             _last_delta = (int)round(((double)(tfs - _timeframestart)) / (_period));
@@ -1383,7 +1400,9 @@ namespace ILI9488_T4
                 delayMicroseconds(t);
             } // make sure we are good
             // ok, scanline is just after sc1 (if not late).
+            if (_readable)
             _slinitpos = _getScanLine(false);                                // save initial scanline position
+            else _slinitpos = 0;
             _em_async = 0;                                                   // start the counter
             const uint32_t tfs = micros() + _microToReachScanLine(0, false); // time when this frame will start being displayed on the screen.
             _last_delta = (int)round(((double)(tfs - _timeframestart)) / (_period));
@@ -1691,7 +1710,7 @@ namespace ILI9488_T4
     uint8_t ILI9488Driver::_readcommand8(uint8_t c, uint8_t index, int timeout_ms)
     {
         // Bail if not valid miso
-        if (_miso == 0xff)
+        if (_miso == 0xff || !_readable)
             return 0;
         uint8_t r = 0;
         _beginSPITransaction(_spi_clock_read);
