@@ -1118,6 +1118,9 @@ namespace ILI9488_T4
         int16_t _width, _height; // Display w/h as modified by current rotation
         int _rotation;           // current screen orientation
         int _refreshmode;        // refresh mode (between 0 = fastest refresh rate and 15 = slowest refresh rate).
+        bool _readable = true;
+        volatile uint32_t *_dcport;
+        uint32_t _dcpinmask;
 
         mutable Stream *_outputStream; // output stream used for debugging
 
@@ -1681,7 +1684,8 @@ namespace ILI9488_T4
         void _beginSPITransaction(uint32_t clock) __attribute__((always_inline))
         {
             _pspi->beginTransaction(SPISettings(clock, MSBFIRST, SPI_MODE0));
-            _spi_tcr_current = _pimxrt_spi->TCR; //  DC is on hardware CS
+            if (!_dcport)
+                _spi_tcr_current = _pimxrt_spi->TCR; //  DC is on hardware CS
             if (_csport)
                 _directWriteLow(_csport, _cspinmask); // drive CS low
         }
@@ -1743,18 +1747,58 @@ namespace ILI9488_T4
             _waitTransmitComplete();
         }
 
-        void _maybeUpdateTCR(uint32_t requested_tcr_state) __attribute__((always_inline))
-        {
 #define ILI9488_T4_TCR_MASK (LPSPI_TCR_PCS(3) | LPSPI_TCR_FRAMESZ(31) | LPSPI_TCR_CONT | LPSPI_TCR_RXMSK)
-            if ((_spi_tcr_current & ILI9488_T4_TCR_MASK) != requested_tcr_state) // we must update the TRANSMIT COMMAND REGISTER (TCR).
+
+        void _maybeUpdateTCR(uint32_t requested_tcr_state) /*__attribute__((always_inline)) */
+        {
+            if ((_spi_tcr_current & ILI9488_T4_TCR_MASK) != requested_tcr_state)
             {
+                bool dc_state_change = (_spi_tcr_current & LPSPI_TCR_PCS(3)) !=
+                                       (requested_tcr_state & LPSPI_TCR_PCS(3));
                 _spi_tcr_current = (_spi_tcr_current & ~ILI9488_T4_TCR_MASK) | requested_tcr_state;
                 // only output when Transfer queue is empty.
-                while ((_pimxrt_spi->FSR & 0x1f))
-                    ;
-                _pimxrt_spi->TCR = _spi_tcr_current; // update the TCR
+                if (!dc_state_change || !_dcpinmask)
+                {
+                    while ((_pimxrt_spi->FSR & 0x1f));
+
+                    _pimxrt_spi->TCR = _spi_tcr_current; // update the TCR
+                }
+                else
+                {
+                    _waitTransmitComplete();
+                    if (requested_tcr_state & LPSPI_TCR_PCS(3))
+                        _directWriteHigh(_dcport, _dcpinmask);
+                    else
+                        _directWriteLow(_dcport, _dcpinmask);
+                    _pimxrt_spi->TCR = _spi_tcr_current &
+                                       ~(LPSPI_TCR_PCS(3) |
+                                         LPSPI_TCR_CONT); // go ahead and update TCR anyway?
+                }
             }
         }
+        // void _maybeUpdateTCR(uint32_t requested_tcr_state) __attribute__((always_inline))
+        // {
+
+        //     if ((_spi_tcr_current & ILI9488_T4_TCR_MASK) != requested_tcr_state || !_dcpinmask) // we must update the TRANSMIT COMMAND REGISTER (TCR).
+        //     {
+        //         _spi_tcr_current = (_spi_tcr_current & ~ILI9488_T4_TCR_MASK) | requested_tcr_state;
+        //         // only output when Transfer queue is empty.
+        //         while ((_pimxrt_spi->FSR & 0x1f))
+        //             ;
+        //         _pimxrt_spi->TCR = _spi_tcr_current; // update the TCR
+        //     }
+        //     else
+        //     {
+        //         _waitTransmitComplete();
+        //         if (requested_tcr_state & LPSPI_TCR_PCS(3))
+        //             _directWriteHigh(_dcport, _dcpinmask);
+        //         else
+        //             _directWriteLow(_dcport, _dcpinmask);
+        //         _pimxrt_spi->TCR = _spi_tcr_current &
+        //                            ~(LPSPI_TCR_PCS(3) |
+        //                              LPSPI_TCR_CONT); // go ahead and update TCR anyway?
+        //     }
+        // }
 
         void _waitFifoNotFull();
 
